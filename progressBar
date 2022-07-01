@@ -1,0 +1,85 @@
+Sub progressBar()
+'Macro to add a progress bar to the powerpoint.
+'This progress bar uses the number of slides in the presentation to determine progress.
+    
+    'I like to keep all of my formatting and variables at the top
+    Dim barColor As Long
+    barColor = RGB(77, 6, 150) '*****CHANGE YOUR COLOR HERE*****
+
+    On Error Resume Next 'error handling
+
+    'Get current powerpoint as an object
+    Dim ppt As Object
+    Set ppt = Application.ActivePresentation
+    
+    'I want to add a dashed line to each slide that shows full bars for what we
+    'have covered and empty bars or what is still to come
+    
+    
+    'Get width of each slide
+    Dim width As Integer
+    width = ppt.PageSetup.SlideWidth
+    
+    'Get number of slides in ppt
+    Dim numSlides As Integer
+    numSlides = ppt.Slides.Count
+    
+    'CREATE ALL DASHES
+    'there will be 1 less gap than there are slides.
+    'I want each gap to be 25% of the width of each dash
+    Dim numGaps As Integer
+    numGaps = numSlides + 1
+    
+    Dim numRects As Integer
+    numRects = numSlides + numGaps
+    
+    'Get width of gaps and dashes
+    Dim dashWidth As Double
+    Dim dashHeight As Integer
+    Dim gapWidth As Double
+    Dim gapRatio As Double
+    
+    'Set proportional width the gaps will be to the dashes
+    '(i.e. the gaps are 25% of the dash width)
+    gapRatio = 0.1
+    
+    'Equation for determining dash width
+    dashWidth = width / (numSlides + (numGaps * gapRatio))
+    dashHeight = 5
+    
+    'How far do you want the dashed from the bottom of the page? (in points)
+    Dim offsetBottom As Integer
+    offsetBottom = 65
+    
+    'and then declare gap width
+    gapWidth = dashWidth * gapRatio
+    
+    
+    'New go through and draw the rectatngles on each slide
+    For i = 1 To numSlides 'loop through each slide
+        
+        'delete progress bar if one is already there
+        For t = 1 To ppt.Slides(i).Shapes.Count 'check all shapes
+            ppt.Slides(i).Shapes("PB").Delete 'if they're named PB, delete them
+        Next t
+            
+        'draw new shape
+        For j = 1 To numSlides
+            
+            Set s = ppt.Slides(i).Shapes.AddShape(msoShapeRectangle, gapWidth + (((j - 1) * dashWidth) + ((j - 1) * gapWidth)), ppt.PageSetup.SlideHeight - dashHeight - offsetBottom, dashWidth, dashHeight)
+            If j <= i Then 'if at current slide or lower
+                s.Fill.ForeColor.RGB = barColor 'fill it in
+                s.Fill.Solid
+           Else
+                'format upcoming slides
+                s.Fill.Transparency = 1 'make the coming slide bars transparent
+            End If
+            s.Shadow.Visible = msoFalse
+            s.Line.ForeColor.RGB = barColor
+            s.Line.Weight = 2
+            s.Name = "PB"
+        Next j
+        
+    Next i
+
+End Sub
